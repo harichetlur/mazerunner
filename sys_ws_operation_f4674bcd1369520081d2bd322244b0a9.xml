@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2016-03-15 16:05:41">
+<sys_ws_operation action="INSERT_OR_UPDATE">
+<active>true</active>
+<consumes>application/json,application/xml,text/xml</consumes>
+<consumes_customized>false</consumes_customized>
+<default_operation_uri/>
+<enforce_acl/>
+<http_method>POST</http_method>
+<name>post</name>
+<operation_script><![CDATA[(function process(/*RESTAPIRequest*/ request, /*RESTAPIResponse*/ response) {
+	
+	var cmd = request.body.data.message.text;
+	var botPath = 'https://api.telegram.org/bot189403639:AAHuqd27Q9VLb4TJSltslBhQlP6eeSPwIk0';
+	var n = 21;
+	var username = request.body.data.message.from.username;
+	var userid = request.body.data.message.from.id;
+		
+	var gr = new GlideRecord('telegram_users');
+	gr.addQuery('user_id', userid);
+	gr.query();
+	gr.next();
+	
+	var body = new JSON();  
+	body.chat_id = userid;
+	body.parse_mode = 'HTML';
+	body.text = '';
+	
+	var mz = new MazeRunner();
+	var posX;
+	var posY;
+	var mapId;
+	
+	if(cmd.indexOf('/start') >= 0 ) {
+		
+		
+		gr.setValue('username', username);
+		gr.setValue('user_id', userid);
+		gr.update();
+		
+		//Initial game
+		mz.setup(userid);
+		
+		//Send initial commands
+		body.text = 'Run like the wind, ' + username + '. Type <b>mv (n/s/e/w)</b> , for north/south/east/west to move one block. Hurry! ';
+		
+	} else if (cmd.toUpperCase() === 'MV N' || cmd.toUpperCase() === 'MOVE NORTH'){
+		posX = parseInt(gr.getValue('player_position_x'));
+		posY = parseInt(gr.getValue('player_position_y'));
+		mapId = gr.getValue('active_map');
+		
+		 if (!mz.checkBlock(posX, posY-1, mapId)) {
+			 posY = posY - 2;
+			 gr.setValue('player_position_y', posY);
+			 gr.update();
+			 body.text = ' You moved North. You are now at x : ' + Math.floor(posX/2) + ' , y : ' + Math.floor(posY/2);
+		 } else {
+			body.text = 'A dungeon wall blocks your way in that direction.';
+		}
+	} else if (cmd.toUpperCase() === 'MV S' || cmd.toUpperCase() === 'MOVE SOUTH'){
+		posX = parseInt(gr.getValue('player_position_x'));
+		posY = parseInt(gr.getValue('player_position_y'));
+		mapId = gr.getValue('active_map');
+		
+		if (!mz.checkBlock(posX, posY + 1, mapId)) {
+			 posY = posY + 2;
+			 gr.setValue('player_position_y', posY);
+			 gr.update();
+			 body.text = ' You moved South. You are now at x : ' + Math.floor(posX/2) + ' , y : ' + Math.floor(posY/2);
+		} else {
+			body.text = 'A dungeon wall blocks your way in that direction.';
+		}
+	} else if (cmd.toUpperCase() === 'MV W' || cmd.toUpperCase() === 'MOVE WEST'){
+		posX = parseInt(gr.getValue('player_position_x'));
+		posY = parseInt(gr.getValue('player_position_y'));
+		mapId = gr.getValue('active_map');
+		
+		if (!mz.checkBlock(posX-1, posY, mapId)) {
+			 posX = posX - 2;
+			 gr.setValue('player_position_x', posX);
+			 gr.update();
+			  body.text = ' You moved West. You are now at x : ' + Math.floor(posX/2) + ' , y : ' + Math.floor(posY/2);
+		} else {
+			body.text = 'A dungeon wall blocks your way in that direction.';
+		}
+	} else if (cmd.toUpperCase() === 'MV E' || cmd.toUpperCase() === 'MOVE EAST'){
+		posX = parseInt(gr.getValue('player_position_x'));
+		posY = parseInt(gr.getValue('player_position_y'));
+		mapId = gr.getValue('active_map');
+		
+		if (!mz.checkBlock(posX + 1, posY, mapId)) {
+			posX = posX + 2;
+			 gr.setValue('player_position_x', posX);
+			 gr.update();
+			  body.text = ' You moved East. You are now at x : ' + Math.floor(posX/2) + ' , y : ' + Math.floor(posY/2);
+		} else {
+			body.text = 'A dungeon wall blocks your way in that direction.';
+		}
+	} else if(cmd.indexOf('/hint') >= 0 ) {
+		posX = parseInt(gr.getValue('player_position_x'));
+		posY = parseInt(gr.getValue('player_position_y'));
+		body.text = ' You are at : x : ' + Math.floor(posX/2) + ' , y : ' + Math.floor(posY/2) + ' . The exit is at x : 5, y: 5';
+		
+	} else {
+		body.text = 'I did not understand that.';
+	}
+	
+	if (posX == 11 && posY == 11) {
+		body.text = 'You got away !!! Nice job. Type <b> /start </b> for a new game.';
+	}
+	
+	try {
+			var r = new sn_ws.RESTMessageV2('Telegram send message', 'post');			
+			r.setRequestBody(JSON.stringify(body));
+			r.setRequestHeader('Content-Type', 'application/json');
+			r.execute();
+		}
+		catch(ex) {
+			var message = ex.getMessage();
+			var gr = new GlideRecord('telegram_log');
+			gr.log = message;
+			gr.insert();
+		}
+})(request, response);]]></operation_script>
+<operation_uri>/api/snc/telegram/AAHuqd27Q9VLb4TJSltslBhQlP6eeSPwIk0</operation_uri>
+<produces>application/json,application/xml,text/xml</produces>
+<produces_customized>false</produces_customized>
+<relative_path>/AAHuqd27Q9VLb4TJSltslBhQlP6eeSPwIk0</relative_path>
+<request_example/>
+<requires_acl_authorization>false</requires_acl_authorization>
+<requires_authentication>false</requires_authentication>
+<short_description/>
+<sys_class_name>sys_ws_operation</sys_class_name>
+<sys_created_by>hari.chetlur@snc</sys_created_by>
+<sys_created_on>2016-02-11 20:20:28</sys_created_on>
+<sys_customer_update>true</sys_customer_update>
+<sys_id>f4674bcd1369520081d2bd322244b0a9</sys_id>
+<sys_mod_count>31</sys_mod_count>
+<sys_name>post</sys_name>
+<sys_package display_value="Global">global</sys_package>
+<sys_policy/>
+<sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+<sys_scope display_value="Global">global</sys_scope>
+<sys_update_name>sys_ws_operation_f4674bcd1369520081d2bd322244b0a9</sys_update_name>
+<sys_updated_by>hari.chetlur@snc</sys_updated_by>
+<sys_updated_on>2016-03-14 22:59:15</sys_updated_on>
+<web_service_definition display_value="telegram">02c4cf8d1369520081d2bd322244b02b</web_service_definition>
+<web_service_version display_value=""/>
+</sys_ws_operation>
+</unload>

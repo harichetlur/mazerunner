@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2016-03-15 16:05:22">
+<sys_script_include action="INSERT_OR_UPDATE">
+<access>public</access>
+<active>true</active>
+<api_name>x_snc_maze_runner.MapGenerator</api_name>
+<client_callable>false</client_callable>
+<description>Generates a random map</description>
+<name>MapGenerator</name>
+<script><![CDATA[var MapGenerator = Class.create();
+MapGenerator.prototype = {
+    
+	map : [],
+	visited: [],
+	
+	initialize: function() {
+		
+		
+    },
+	
+	createMap: function() {
+	
+		var n = 10;
+		this.map = this.createArray(2 * n + 1, 2 * n + 1);
+		this.visited = this.createArray(n + 2, n + 2);
+		
+		for(var i = 1; i < n +1 ; i ++) {
+			for(var j = 1; j< n + 1; j++){
+				this.visited[i][j] = false;
+			}
+		}
+		this.generate(n, 1, 1);
+		return this.persistMap();
+	},
+	
+	persistMap: function(){
+	
+		var grMapParent = new GlideRecord('x_snc_maze_runner_map_parent');
+		grMapParent.setValue('map_type', 'Dungeon');
+		var mapParentSysId = grMapParent.insert();
+		
+		for(var i =0 ; i < this.map.length; i++) {
+			for(var j = 0; j < this.map[0].length; j++){
+				if(this.map[i][j] == true) {
+					var grMapPoint = new GlideRecord('x_snc_maze_runner_map_layout');
+					grMapPoint.setValue('x_coordinate', i);
+					grMapPoint.setValue('y_coordinate', j);
+					grMapPoint.setValue('map_id', mapParentSysId);
+					grMapPoint.insert();
+				}
+			}
+		}
+		
+		return mapParentSysId;
+	},
+	
+	generate : function(n, x, y) {
+		this.visited[x][y] = true;
+		this.map[2 * x-1][2 * n-2*y+1] = false;
+		
+	    // while there is an unvisited neighbor
+	    while (!this.visited[x][y+1] || !this.visited[x+1][y] || !this.visited[x][y-1] || !this.visited[x-1][y]) {
+			
+		    // pick random neighbor (could use Knuth's trick instead)
+		    while (true) {
+				
+				var rand = (Math.random() * 4) + 1;
+			    var r  = Math.floor(rand);
+			    if (r == 1 && !this.visited[x][y+1]) {
+				    this.map[2*x-1][2*n-2*y] = false;
+				    this.generate(n, x, y + 1);
+				    break;
+			    }
+			    else if (r == 2 && !this.visited[x+1][y]) {
+				    this.map[2*x][2*n-2*y+1] = false;
+				    this.generate(n, x+1, y);
+				    break;
+			    }
+			    else if (r == 3 && !this.visited[x][y-1]) {
+				    this.map[2*x-1][2*n-2*y+2] = false;
+				    this.generate(n, x, y-1);
+				    break;
+			    }
+			    else if (r == 4 && !this.visited[x-1][y]) {
+				    this.map[2*x-2][2*n-2*y+1] = false;
+				    this.generate(n, x-1, y);
+				    break;
+			    }
+		    }
+	    }
+	},
+	
+	createArray : function(xLength, yLength) {
+		var array = new Array(xLength);
+			for (var i = 0; i < xLength; i++) {
+			  array[i] = new Array(yLength);
+			}
+		
+		for(var x = 0; x < xLength; x++) {
+			for(var y = 0; y < yLength; y++) {
+				array[x][y] = true;
+			}
+		}
+		return array;
+	},
+	
+	checkBlock: function( x, y, map) {
+		var grMapPoint = new GlideRecord('x_snc_maze_runner_map_layout');
+		grMapPoint.addQuery('x_coordinate', x);
+		grMapPoint.addQuery('y_coordinate', y);
+		grMapPoint.addQuery('map_id', map);
+		grMapPoint.query();
+		return grMapPoint.hasNext();
+	},
+
+    type: 'MapGenerator'
+};]]></script>
+<sys_class_name>sys_script_include</sys_class_name>
+<sys_created_by>hari.chetlur@snc</sys_created_by>
+<sys_created_on>2016-03-12 19:44:54</sys_created_on>
+<sys_customer_update>true</sys_customer_update>
+<sys_id>99ed8d3613ce960081d2bd322244b057</sys_id>
+<sys_mod_count>3</sys_mod_count>
+<sys_name>MapGenerator</sys_name>
+<sys_package display_value="Maze Runner">e60dc53613ce960081d2bd322244b09f</sys_package>
+<sys_policy>read</sys_policy>
+<sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+<sys_scope display_value="Maze Runner">e60dc53613ce960081d2bd322244b09f</sys_scope>
+<sys_update_name>sys_script_include_99ed8d3613ce960081d2bd322244b057</sys_update_name>
+<sys_updated_by>hari.chetlur@snc</sys_updated_by>
+<sys_updated_on>2016-03-12 23:58:30</sys_updated_on>
+</sys_script_include>
+</unload>

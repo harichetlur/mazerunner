@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2016-03-15 16:05:13">
+<sys_script_include action="INSERT_OR_UPDATE">
+<access>package_private</access>
+<active>true</active>
+<api_name>global.MazeRunner</api_name>
+<client_callable>false</client_callable>
+<description/>
+<name>MazeRunner</name>
+<script><![CDATA[var MazeRunner = Class.create();
+MazeRunner.prototype = {
+    initialize: function() {
+    },
+	
+	setup: function(userid) {
+		var mapGenerator = new x_snc_maze_runner.MapGenerator();
+		var mapSysId = mapGenerator.createMap();
+		
+		var grPlayer = new GlideRecord('telegram_users');
+		grPlayer.addQuery('user_id', userid);
+		grPlayer.query();
+		grPlayer.next();
+		
+		grPlayer.setValue('active_map', mapSysId);
+		grPlayer.setValue('player_position_x', 1);
+		grPlayer.setValue('player_position_y', 1);
+		grPlayer.update();
+			
+	},
+	
+	
+	checkBlock: function( x, y, map) {
+		var mapGenerator = new x_snc_maze_runner.MapGenerator();
+		return mapGenerator.checkBlock(x, y, map);
+	},
+
+    type: 'MazeRunner'
+};]]></script>
+<sys_class_name>sys_script_include</sys_class_name>
+<sys_created_by>hari.chetlur@snc</sys_created_by>
+<sys_created_on>2016-03-12 23:31:27</sys_created_on>
+<sys_customer_update>true</sys_customer_update>
+<sys_id>d6715e361302d60081d2bd322244b0e8</sys_id>
+<sys_mod_count>4</sys_mod_count>
+<sys_name>MazeRunner</sys_name>
+<sys_package display_value="Global">global</sys_package>
+<sys_policy/>
+<sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+<sys_scope display_value="Global">global</sys_scope>
+<sys_update_name>sys_script_include_d6715e361302d60081d2bd322244b0e8</sys_update_name>
+<sys_updated_by>hari.chetlur@snc</sys_updated_by>
+<sys_updated_on>2016-03-13 06:27:35</sys_updated_on>
+</sys_script_include>
+</unload>
